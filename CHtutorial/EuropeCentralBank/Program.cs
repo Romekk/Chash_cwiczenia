@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace EuropeCentralBank
@@ -9,17 +10,27 @@ namespace EuropeCentralBank
     {
         static void Main(string[] args)
         {
-            CultureInfo usCulture = new CultureInfo("en-US");
+
+             
+            XmlReader xmlReader = XmlReader.Create("http://www.ecb.int/stats/eurofxref/eurofxref-daily.xml");
+                while (xmlReader.Read())
+                {   if (xmlReader.GetAttribute("currency") == "PLN") 
+                            Console.WriteLine(xmlReader.GetAttribute("currency") + ": " + xmlReader.GetAttribute("rate"));
+                    
+                }
+                Console.ReadKey();
+
+                CultureInfo usCulture = new CultureInfo("en-US");
             XDocument xDoc = XDocument.Load("http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml");
             var cubeNodes = xDoc.Descendants().Where(n => n.Name.LocalName == "Cube" && n.Attribute("currency") != null).ToList();
             var currencyRateItems = cubeNodes.Select(node => new
             {
                 Currency = node.Attribute("currency").Value,
-                Rate = double.Parse(node.Attribute("rate").Value, usCulture)
+                Rate = double.Parse(node.Attribute("rate").Value, plCulture)
             });
 
 
-            int pageSize = 5, pageCounter = 0;
+            int pageSize = 10, pageCounter = 0;
             var pageItems = currencyRateItems.Take(pageSize);
             while (pageItems.Count() > 0)
             {
